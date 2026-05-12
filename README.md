@@ -4,7 +4,9 @@
 This repository contains the `sra-convert` pipeline — a modular, HPC‑compatible workflow for:
 - Converting previously downloaded `.sra` files into FASTQ format in a robust, restart‑safe, parallelizable manner.
 
-The pipeline is designed to operate downstream of `sra-download` and assumes that `.sra` files have already been acquired and organized in a deterministic directory layout. However, it can be used in conjuction with another sra download method, as long as input structure is consistent with this pipeline.
+The pipeline is designed to operate downstream of `sra-download` and assumes that `.sra` files have already been acquired and organized in a deterministic directory layout. 
+
+However, it can be used in conjuction with another sra download method, as long as input structure is consistent with this pipeline.
 
 The pipeline is designed specifically for HPC environments and supports:
 - SLURM array–based parallel conversion of SRA runs
