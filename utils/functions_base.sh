@@ -275,7 +275,7 @@ fail () {
 # Example:
 #   check_arg "$DIR" || return $?
 check_arg() {
-    if [[ -n "$1"]] || {
+    if [[ -n "$1" ]] || {
         echo "    ${FUNCNAME[1]}: required argument missing" >&2
         return 2
     }
