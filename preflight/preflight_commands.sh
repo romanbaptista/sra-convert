@@ -1,6 +1,10 @@
 #!/bin/bash
 set -euo pipefail
 
+######################### GUARDS ##########################
+
+: "${UTILS_DIR:?UTILS_DIR not set (check PATHS section in run_pipeline.sh)}"
+
 ######################### SETUP ##########################
 
 # Define script name

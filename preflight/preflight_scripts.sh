@@ -4,6 +4,7 @@ set -euo pipefail
 ######################### GUARDS ##########################
 
 : "${MODULES_DIR:?MODULES_DIR not set (check PATHS section in run_pipeline.sh)}"
+: "${UTILS_DIR:?UTILS_DIR not set (check PATHS section in run_pipeline.sh)}"
 
 ######################### SETUP ##########################
 
