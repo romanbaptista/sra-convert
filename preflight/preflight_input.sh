@@ -20,7 +20,7 @@ echo "  Checking for .sra files..."
 
 # Check for at least one .sra file anywhere under INPUT_DIR
 if ! find "${INPUT_DIR}" -type f -name "*.sra" | grep -q .; then
-    fail "  No .sra files found under INPUT_DIR=${INPUT_DIR}"
+    fail "  ERROR: No .sra files found under INPUT_DIR=${INPUT_DIR}"
 fi
 
 echo "  .sra files found"

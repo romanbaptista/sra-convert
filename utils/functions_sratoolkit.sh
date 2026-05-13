@@ -148,6 +148,7 @@ install_sratoolkit() {
     check_arg "${url}" || return $?
     check_arg "${extract_dir}" || return $?
     
+    echo "  Installing sratoolkit..."
     download_sratoolkit "${archive}" "${url}" || fail "  Unable to download SRA Toolkit using 'wget'"
     extract_sratoolkit "${archive}" "${extract_dir}" || fail "  Unable to extract SRA Toolkit archive using 'tar'"
     echo "  Confirming installation..."

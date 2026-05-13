@@ -91,5 +91,6 @@ PIPELINE_JOB_ID=$(
 ) || fail "  ERROR: Failed to submit pipeline.sh"
 
 echo
+echo "Pipeline Job ID: ${PIPELINE_JOB_ID}"
 echo "${PIPELINE_NAME} ${SCRIPT_NAME} COMPLETE"
 echo 
