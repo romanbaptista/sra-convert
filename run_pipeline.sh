@@ -29,7 +29,7 @@ DIR_ARRAY=(
 )
 
 # Create directories
-for dir in "${DIR_ARRAY[@]}":
+for dir in "${DIR_ARRAY[@]}"; do
     mkdir -p "${!dir}"
 done
 
@@ -61,7 +61,7 @@ echo "Moving to main execution"
 ######################### EXPORT ##########################
 
 # Iterate over items to export
-for var in "${EXPORT_ARRAY[@]}";do
+for var in "${EXPORT_ARRAY[@]}"; do
     export "${var}"
 done
 
