@@ -5,6 +5,7 @@ set -euo pipefail
 
 : "${MODULES_DIR:?MODULES_DIR not set (check PATHS section in run_pipeline.sh)}"
 : "${UTILS_DIR:?UTILS_DIR not set (check PATHS section in run_pipeline.sh)}"
+: "${SCRIPT_ARRAY:?SCRIPT_ARRAY not set (check arrays.sh)}"
 
 ######################### SETUP ##########################
 

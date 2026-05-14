@@ -4,6 +4,7 @@ set -euo pipefail
 ######################### GUARDS ##########################
 
 : "${UTILS_DIR:?UTILS_DIR not set (check PATHS section in run_pipeline.sh)}"
+: "${COMMAND_ARRAY:?COMMAND_ARRAY not set (check arrays.sh)}"
 
 ######################### SETUP ##########################
 
