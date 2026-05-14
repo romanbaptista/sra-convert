@@ -47,17 +47,6 @@ LOG_FILE="${LOG_DIR}/${SCRIPT_NAME}.log"
 # Redirect stdout/stderr to terminal and log file
 exec > >(tee -a "${LOG_FILE}") 2>&1
 
-######################### CHECKS ##########################
-
-echo
-echo "PREFLIGHT for ${PIPELINE_NAME} ..."
-
-source "${PREFLIGHT_DIR}/preflight.sh"
-
-echo
-echo "Preflight COMPLETE"
-echo "Moving to main execution"
-
 ######################### EXPORT ##########################
 
 # Iterate over items to export
@@ -68,6 +57,17 @@ done
 # Snapshot EXPORT_ARRAY
 SBATCH_EXPORTS="$(IFS=,; echo "${EXPORT_ARRAY[*]}")"
 export SBATCH_EXPORTS
+
+######################### CHECKS ##########################
+
+echo
+echo "PREFLIGHT for ${PIPELINE_NAME} ..."
+
+source "${PREFLIGHT_DIR}/preflight.sh"
+
+echo
+echo "Preflight COMPLETE"
+echo "Moving to main execution"
 
 ######################### MAIN ############################
 
