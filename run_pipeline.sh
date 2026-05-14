@@ -36,9 +36,9 @@ done
 ######################### SOURCE ##########################
 
 # Source scripts
+source "${PIPELINE_DIR}/config.sh"
 source "${UTILS_DIR}/functions_base.sh"
 source "${UTILS_DIR}/arrays.sh"
-source "${PIPELINE_DIR}/config.sh"
 
 ######################### LOGS ############################
 
