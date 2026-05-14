@@ -11,11 +11,6 @@ set -euo pipefail
 # Define script name
 SCRIPT_NAME=$(basename "${BASH_SOURCE[0]}" .sh)
 
-######################## SOURCE ##########################
-
-# Source utils file
-source "${UTILS_DIR}/arrays.sh"
-
 ######################### MAIN ############################
 
 echo "  RUNNING ${SCRIPT_NAME} ..."
