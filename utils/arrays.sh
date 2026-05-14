@@ -63,7 +63,6 @@ EXPORT_ARRAY=(
     FASTERQ_MEM_PER_CPU
 )
 
-
 # COMMAND_ARRAY:
 # Canonical list of generic external commands required by the sra-convert
 # pipeline framework.
