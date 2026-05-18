@@ -35,5 +35,9 @@ echo "  Checking for pipeline.sh ..."
 check_file "${MODULES_DIR}/pipeline.sh" || fail "   Please ensure pipeline.sh exists"
 check_file_data "${MODULES_DIR}/pipeline.sh" || fail "   Please ensure pipeline.sh contains data"
 
+if ! check_executable "${MODULES_DIR}/${script}"; then 
+    make_executable "${MODULES_DIR}/${script}" || fail "  File cannot be made executable: ${script}"
+fi
+
 echo "  pipeline.sh confirmed"
 echo "  ${SCRIPT_NAME} COMPLETE"
