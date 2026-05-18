@@ -21,6 +21,11 @@ echo "  Checking for module scripts..."
 for script in "${SCRIPT_ARRAY[@]}"; do
     check_file "${MODULES_DIR}/${script}" || fail "    Please ensure file exists: ${script}"
     check_file_data "${MODULES_DIR}/${script}" || fail "   Please ensure file contains data: ${script}"
+
+    if ! check_executable "${MODULES_DIR}/${script}"; then 
+        make_executable "${MODULES_DIR}/${script}" || fail "  File cannot be made executable: ${script}"
+    fi
+
 done
 
 echo "  All module scripts confirmed"
