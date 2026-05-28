@@ -18,23 +18,27 @@ SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}" .sh)"
 ######################### SOURCE #########################
 
 # Source array
-source "${ARRAY_DIR}/array_variables.sh"
+source "${ARRAY_DIR}/array_exports.sh"
 
 ######################### CHECKS #########################
 
-variable_check_nonempty VARIABLE_ARRAY || fail_message "VARIABLE_ARRAY is empty or is not set"
-array_check_nonempty VARIABLE_ARRAY || fail_message "VARIABLE_ARRAY has no elements"
+variable_check_nonempty EXPORT_ARRAY || fail_message "EXPORT_ARRAY is empty or is not set"
+array_check_nonempty EXPORT_ARRAY || fail_message "EXPORT_ARRAY has no elements"
 
 ######################### MAIN ###########################
 
 echo
 echo "RUNNING ${SCRIPT_NAME} ..."
-echo "  Checking for core user-defined variables..."
+echo "  Generating export snapshot..."
 
-# Iterate over variables
-for var in "${VARIABLE_ARRAY[@]}"; do
-    variable_check_nonempty "${var}" || fail_message "Variable is empty or not defined: ${var}"
+# Export variables
+for var in "${EXPORT_ARRAY[@]}"; do
+    export "${var}"
 done
 
-echo "  User-defined variables confirmed"
+# Generate snapshot
+SBATCH_EXPORTS="$(IFS=,; echo "${EXPORT_ARRAY[*]}")"
+export SBATCH_EXPORTS
+
+echo "  Export snapshot generated"
 echo "${SCRIPT_NAME} COMPLETE"

@@ -16,7 +16,6 @@
 # (e.g. sra-download) and is treated as read-only by sra-convert.
 INPUT_DIR=""
 
-
 # ACCESSION_FILE:
 # Path to a plain-text file containing one SRR accession ID per line.
 #
@@ -29,7 +28,7 @@ INPUT_DIR=""
 #   - Blank lines are ignored
 ACCESSION_FILE=""
 
-######################### 1_SUBMIT_ARRAY.SH #############################
+######################### SUBMIT-ARRAY.SH ###########################
 
 # SLURM_MAX_JOBS:
 # Maximum number of concurrent SLURM array tasks.
@@ -37,7 +36,7 @@ ACCESSION_FILE=""
 # parallel to avoid overwhelming cluster resources or job limits.
 SLURM_MAX_JOBS=20
 
-######################### 2_CONVERT_SRA.SH ##############################
+######################### SRA-FASTQ.SH ##############################
 
 # FASTERQ_CPUS:
 # Number of CPU threads allocated per fasterq-dump task.

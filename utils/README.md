@@ -1,144 +1,148 @@
 # `utils`
-This directory contains shared utility scripts used by the `sra-convert` pipeline.
 
-The scripts in utils/ provide reusable, defensive helper logic that supports:
-- Preflight validation
-- Tool installation and verification
-- Configuration enforcement
-- Deterministic pipeline behavior under strict Bash execution
+# Overview
+The `utils/` directory contains all static variable definitions used throughout the pipeline.
 
-Utility scripts are sourced by:
-- `run_pipeline.sh`
-- Preflight scripts
-- Pipeline module scripts (where explicitly required)
+These scripts define:
+- directory paths
+- tool parameters (version, download URL, install location)
+- environment file locations
 
-They are not intended to be executed directly.
+Importantly, `utils/` is a pure definition layer — it contains no logic, validation, or execution.
 
-# Design Contract
-All utility scripts in this directory adhere to the following principles:
-- Pure helper logic only (no pipeline orchestration)
-- Safe operation under `set -euo pipefail`
-- Explicit, readable control flow
-- Clear and actionable error messages
-- No reliance on implicit working directories
-- No modification of global system settings
-- Deterministic behavior across HPC environments
+# Design Principles
+The `utils/` layer follows strict design rules:
+- Definitions only — no functions or control flow
+- No validation — all checks occur in the preflight layer
+- No side effects — sourcing only sets variables
+- Centralised variable ownership — each variable is defined exactly once
+- Deterministic behaviour — no runtime decisions or dynamic modification
 
-Utility functions are stateless and rely entirely on:
-- Explicit function arguments, and/or
-- Variables provided by the sourced pipeline context
+These principles ensure that the pipeline maintains a clean separation between:
+- what is defined (utils)
+- what is validated (preflight)
+- what is executed (pipeline/modules)
 
-# Utility Script Overview
+# Role in the Pipeline
+The `utils/` layer acts as the source of truth for derived variables, particularly:
+- directory structure
+- tool parameters
+- environment file locations
+
+| Aspect | Description |
+|--------|------------|
+| Purpose | Static variable definitions |
+| Contains logic? | No |
+| Performs validation? | No |
+| Consumed by | Preflight and execution layers |
+| Scope | Paths and tool parameters |
+
+These variables are:
+- consumed by preflight scripts for validation and environment setup
+- used to construct derived runtime state (e.g. output directories, env files)
+- passed explicitly to downstream execution via the pipeline ABI
+
+This ensures that all paths and tool parameters are:
+- defined once
+- validated centrally
+- used consistently across all layers
+
+# File Overview
+The directory is organised into:
+- a shared path definition file (`utils_paths.sh`)
+- tool-specific parameter definitions (`utils_<tool>.sh`)
+
+Each file:
+- defines variables within its domain
+- contains no logic
+- introduces no side effects
+
+| File | Responsibility |
+|------|----------------|
+| `utils_paths.sh` | Defines core directory variables and initialises DIR_ARRAY |
+
+## `utils_paths.sh`
+Defines all core directory paths derived from `ROOT_DIR`.
+
+Typical variables include:
+
 ```text
-arrays.sh
-functions_base.sh
-functions_sratoolkit.sh
+ARRAY_DIR
+FUNCTIONS_DIR
+PIPELINE_DIR
+PREFLIGHT_DIR
+UTILS_DIR
+OUTPUT_DIR
 ```
-Each script serves a narrow, well‑defined purpose and participates in a strict separation of concerns between validation, installation, and execution.
 
-## `arrays.sh`
-Defines the canonical arrays that describe the structure and requirements of the `sra-convert` pipeline.
+It also initialises `DIR_ARRAY`, which contains pipeline-owned writable directories.
 
-### Responsibilities
-- Declares the ordered set of preflight scripts executed during pipeline validation
-- Declares the ordered set of module scripts that comprise the pipeline
-- Declares the execution ABI (`EXPORT_ARRAY`) passed to downstream SLURM jobs
-- Declares the set of framework‑level external commands required
-- Declares the set of required user configuration variables
+This array is later extended during preflight to include:
+- environment directories
+- module-specific output locations
 
-All preflight scripts defer to `arrays.sh` as the single source of truth for what must be validated.
+This file establishes the directory structure contract of the pipeline.
 
-### Arrays
+## `utils_sratoolkit.sh`
+Defines all parameters required for the SRA Toolkit.
 
-| Array | Purpose |
-|------|---------|
-| `PREFLIGHT_ARRAY` | Ordered list of preflight scripts executed by `preflight.sh` |
-| `SCRIPT_ARRAY` | Ordered list of pipeline module scripts |
-| `EXPORT_ARRAY` | Pipeline‑owned variables that define the execution ABI |
-| `COMMAND_ARRAY` | Framework‑level commands required by the pipeline |
-| `VARIABLE_ARRAY` | Required user‑defined configuration variables |
+Includes:
+- toolkit version (`SRA_VERSION`)
+- archive name (`SRA_ARCHIVE`)
+- download URL (`SRA_URL`)
+- installation directory (`SRA_DIR`)
+- environment file path (`SRA_ENV`)
 
-This script is purely declarative and contains no executable logic.
+These variables are consumed by:
+- `preflight_sratoolkit.sh`
+- `functions_sratoolkit.sh`
 
-## `functions_base.sh`
-Provides core validation and helper functions used throughout the pipeline.
+No installation or validation logic is present here.
 
-### Responsibilities
-- Validates files, directories, commands, and variables
-- Enforces non‑empty configuration values
-- Provides consistent error handling and messaging
-- Supplies reusable filesystem and path helpers
-- Writes reproducible environment files for tool configuration
+# Variable Ownership Model
+Each variable is defined in the layer where its meaning originates:
+- global structure → `utils_paths.sh`
+- tool configuration → `utils_<tool>.sh`
+- pipeline-derived values → preflight scripts
 
-These functions form the foundation upon which all preflight validation and guard enforcement are built.
+This prevents:
+- duplication
+- accidental redefinition
+- hidden dependencies
 
-### Functions
+and ensures each variable has a clear, single owner.
 
-| Function | Purpose |
-|---------|---------|
-| `check_file` | Confirms that a regular file exists |
-| `check_file_data` | Confirms that a file exists and is non‑empty |
-| `check_directory` | Confirms that a directory exists |
-| `check_variable` | Confirms that a named variable is set and non‑empty |
-| `check_string` | Confirms that a string value is non‑empty |
-| `check_command` | Confirms that a command is available in `PATH` |
-| `check_executable` | Confirms that a file exists and is executable |
-| `make_executable` | Adds execute permissions to a file |
-| `check_arg` | Confirms that required function arguments are provided |
-| `fail` | Emits an error message and terminates execution |
-| `write_env` | Writes a reproducible environment file for tool setup |
-| `get_directory` | Resolves the directory containing a given path |
-| `get_parent_directory` | Resolves the parent directory of a given path |
+# Usage Pattern
+Utils scripts are sourced by preflight scripts:
 
-All functions are designed to fail early and emit context‑rich error messages.
+```bash
+source "${UTILS_DIR}/utils_paths.sh"
+source "${UTILS_DIR}/utils_sratoolkit.sh"
+```
 
-## `functions_sratoolkit.sh`
-Provides SRA Toolkit–specific helpers for validation and installation.
+Variables defined here are then:
+- validated in preflight
+- used to construct pipeline state
+- passed to execution layers via the export ABI
 
-### Responsibilities
-- Detects whether a coherent SRA Toolkit installation is available
-- Enforces a pinned SRA Toolkit version
-- Downloads and installs the toolkit if missing or incorrect
-- Derives and exports the toolkit installation directory
-- Supports reproducible, environment‑file‑based configuration
+They are never redefined during execution.
 
-All SRA Toolkit logic is centralized here so that:
-- Preflight establishes all tool invariants
-- Module scripts can assume correctness at runtime
-- Tool installation never occurs during execution
+# Key Rules
+- Do not include logic (no loops, no conditionals)
+- Do not perform validation
+- Do not modify variables after definition
+- Ensure variables are clearly named and unambiguous
+- Keep all definitions deterministic and reproducible
 
-### Functions
+# Summary
+The `utils/` directory defines the static configuration layer of the pipeline.
 
-| Function | Purpose |
-|---------|---------|
-| `check_sratoolkit` | Verifies toolkit presence and derives `SRA_DIR` |
-| `download_sratoolkit` | Downloads the pinned SRA Toolkit archive |
-| `extract_sratoolkit` | Extracts the toolkit and exposes binaries to `PATH` |
-| `install_sratoolkit` | Orchestrates installation and post‑install validation |
+It ensures that:
+- all paths and tool parameters are declared in one place
+- variable definitions are consistent and traceable
+- downstream scripts rely on a stable, pre-validated environment
 
-As with all utilities, installation is deterministic and restart‑safe.
-
-# Usage
-Utility scripts are sourced where required and must never be executed directly.
-
-functions_base.sh is sourced by:
-- `run_pipeline.sh`
-- All preflight scripts
-- Orchestration modules requiring helpers
-
-Tool‑specific utility scripts are sourced only by their corresponding preflight scripts.
-
-# Error Handling
-All utility functions are designed to:
-- Fail immediately on invalid input
-- Emit concise, context‑aware error messages
-- Prevent execution from progressing in an unsafe state
-
-This ensures that pipeline failures occur as early and close to the source of the problem as possible.
-
-# Notes
-- Utility scripts deliberately contain no pipeline execution logic
-- Tool installation logic is isolated, deterministic, and repeat‑safe
-- No utility script assumes a specific SLURM execution context
-- All validation logic is centralized; module scripts do not repeat checks
-- Adding a new tool or pipeline stage should include corresponding utility helpers
+This separation is critical for maintaining a:
+- reproducible
+- portable
+- contract-driven pipeline architecture

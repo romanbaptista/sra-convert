@@ -1,144 +1,191 @@
 # `preflight`
-This directory contains the preflight validation layer for the `sra-convert` pipeline.
 
-Preflight scripts are responsible for all validation and environment checks required to safely execute the pipeline on an HPC system before any SLURM jobs are submitted.
+# Overview
+The `preflight/` directory implements the validation and environment construction layer of the pipeline.
 
-No pipeline modules are executed unless all preflight checks succeed.
+This layer is responsible for ensuring that all requirements are satisfied before any SLURM jobs are submitted.
 
-All preflight scripts are sourced and executed by `run_pipeline.sh` on the login node, ensuring that pipeline execution begins only after the environment, configuration, and inputs are fully validated.
+It performs:
+- validation of user configuration
+- validation of system environment
+- validation of input data
+- validation of pipeline structure
+- installation and verification of required tools
+- construction of runtime directories
+- creation of environment files
+- construction of the execution ABI (`SBATCH_EXPORTS`)
 
-# Design Contract
-All preflight scripts adhere to the following principles:
-- Fail‑fast validation before any pipeline execution
-- No side effects beyond controlled, deterministic tool installation
-- Clear, actionable error messages on failure
-- Deterministic behavior with explicit ordering
-- Validation only — no execution or data processing logic
-- Centralized enforcement of pipeline invariants
+The preflight phase enforces a strict fail‑fast model, guaranteeing that downstream execution begins only in a fully validated and deterministic state.
 
-Once preflight validation completes successfully, downstream scripts may assume:
-- All required configuration variables are valid and non‑empty
-- All required commands and tools are available and usable
-- Input data is present and correctly typed
-- Required directories exist and are writable
-- Tool environments can be safely sourced without further checks
+# Design Principles
+The preflight layer follows core architectural rules:
+- Fail-fast — any error immediately terminates the pipeline
+- Validation-only responsibility — no execution or data processing logic
+- Deterministic ordering — all steps run in a strictly defined sequence
+- Explicit contracts — validation driven entirely by arrays
+- No hidden state — all required variables, tools, and inputs are explicitly checked
+- Reproducibility — tool environments are written to `.env` files
 
-# Responsibilities of Preflight
-The preflight layer ensures that:
-- User configuration is complete and non‑empty
-- Input data directories exist and contain valid `.sra` files
-- Accession lists exist and contain data
-- Pipeline module scripts exist and are non‑empty
-- Required framework‑level commands are available
-- Required toolchains (SRA Toolkit) are installed and usable
-- Tool installations are reproducible and environment files are written
+This ensures that all downstream scripts can assume:
+- consistent state
+- valid inputs
+- functional tools
 
-This prevents late‑stage failures, wasted cluster resources, and partially‑executed pipelines caused by missing dependencies or invalid inputs.
+# Role in the Pipeline
+The preflight layer is executed immediately after the entrypoint script (`sra-convert.sh`) and before any SLURM submission occurs.
 
-# Preflight Script Overview
-The set and execution order of all preflight scripts is centrally defined in:
+It ensures:
+- all required variables are defined and non-empty
+- all required binaries are available
+- all input files and directories are valid
+- all pipeline scripts exist and are executable
+- all tools are installed and functional
+- all runtime directories exist
+- all environment files are correctly written
+- the execution ABI is fully constructed
 
+Only once all checks succeed does execution proceed to the pipeline orchestration stage.
+
+# Execution Flow
+Preflight is orchestrated by `preflight.sh`.
+
+This script:
+- sources `array_preflight.sh`
+- executes each preflight script in order
+- terminates immediately on failure
+
+Each script:
+- consumes only validated upstream state
+- constructs or validates a specific part of the environment
+
+This enforces a strict producer → consumer relationship between stages.
+
+# Preflight Stages
+The pipeline implements the following validation stages:
+
+### Paths
+- Defines all pipeline directories via `utils_paths.sh`
+- Extends `DIR_ARRAY` with pipeline-specific directories
+- Creates all required directories
+
+### Variables
+- Validates user-defined configuration variables from `config.sh`
+
+### Binaries
+- Verifies required system-level CLI tools from `BINARY_ARRAY`
+
+### Input
+- Validates input directory structure
+- Confirms presence of .sra files
+- Validates accession file contents
+
+### Exports
+- Constructs the pipeline execution ABI from `EXPORT_ARRAY`
+- Generates `SBATCH_EXPORTS` for SLURM submission
+
+### Pipeline
+- Confirms all module scripts exist
+- Ensures scripts are non-empty and executable
+- Validates presence of `pipeline.sh`
+
+### Tools
+- Installs and validates required tools (SRA Toolkit)
+- Constructs and writes environment files
+
+# Script Structure
+Each preflight script follows a consistent structure:
 ```text
-utils/arrays.sh  → PREFLIGHT_ARRAY
+GUARDS
+SETUP
+SOURCE
+CHECKS
+MAIN
 ```
 
-`preflight/preflight.sh` sources and executes each script listed in `PREFLIGHT_ARRAY` sequentially, terminating immediately on failure.
+- `GUARDS` validate required input variables
+- `SETUP` defines script-level constants
+- `SOURCE` imports required definitions
+- `CHECKS` validate consumed state
+- `MAIN` performs validation or state construction
 
-### Current preflight order
-```text
-preflight_variables.sh
-preflight_input.sh
-preflight_commands.sh
-preflight_scripts.sh
-preflight_sratoolkit.sh
-```
+This structure ensures:
+- predictable control flow
+- minimal side effects
+- explicit dependencies
 
-## `preflight_input.sh`
-Validates pipeline input data.
+# Tool Integration Model
+Tools follow a three-layer integration model:
 
-### Responsibilities
-- Confirms `INPUT_DIR` is defined and exists
-- Verifies that `.sra` files are present somewhere under `INPUT_DIR`
-- Confirms `ACCESSION_FILE` exists and contains data
+- `utils_<tool>.sh`
+→ defines parameters (version, URL, paths)
 
-This script enforces the pipeline’s input data contract, ensuring that the pipeline is operating on the correct data type before any execution occurs.
+- `functions_<tool>.sh`
+→ implements atomic install and validation logic
 
-## `preflight_variables.sh`
-Validates required user‑defined configuration variables.
+- `preflight_<tool>.sh`
+→ orchestrates installation and validation
 
-### Responsibilities
-Confirms all required variables in `config.sh` are:
-- Defined
-- Non‑empty
+For this pipeline:
+- only the SRA Toolkit is required
+- validation is centred on `fasterq-dump` functionality
 
-Variables validated include:
-- `INPUT_DIR`
-- `ACCESSION_FILE`
-- `SLURM_MAX_JOBS`
-- `FASTERQ_CPUS`
-- `FASTERQ_MEM_PER_CPU`
+This ensures:
+- tools are installed deterministically
+- validation is consistent
+- execution modules do not perform tool checks
 
-This ensures the pipeline has sufficient configuration to submit and execute SLURM jobs deterministically.
+# Environment Construction
+The preflight layer builds the runtime environment by:
+- creating all required directories
+- installing tools if missing
+- resolving installation paths
+- writing `.env` files to `env/`
 
-## `preflight_scripts.sh`
-Validates pipeline module integrity.
+These environment files:
+- define tool locations
+- reconstruct `PATH` for execution
+- ensure reproducible behaviour across compute nodes
 
-### Responsibilities
-- Confirms all expected module scripts exist under `modules/`
-- Verifies that each module script is non‑empty
-- Confirms presence and integrity of `modules/pipeline.sh`
+# Execution ABI
+The preflight layer constructs the execution ABI via:
+- `array_exports.sh` → defines required variables
+- `preflight_exports.sh` → constructs `SBATCH_EXPORTS`
 
-This prevents execution of incomplete or corrupted module code.
+This ensures that:
+- only required variables are passed to SLURM jobs
+- no implicit environmental state is relied upon
+- execution is reproducible across nodes
 
-## `preflight_commands.sh`
-Validates required framework‑level external commands.
+# Execution Relationships
+Each preflight script is responsible for a specific contract:
 
-### Responsibilities
-- Confirms availability of all generic, non‑tool‑specific commands used by the pipeline
-- Uses strict `PATH`‑based validation
+| Script | Responsibility |
+|--------|----------------|
+| `preflight.sh` | Orchestrates execution of all preflight checks |
+| `preflight_paths.sh` | Defines and creates required directories |
+| `preflight_variables.sh` | Validates user configuration variables |
+| `preflight_binaries.sh` | Validates required system binaries |
+| `preflight_input.sh` | Validates input directories and accession file |
+| `preflight_exports.sh` | Constructs SBATCH_EXPORTS from EXPORT_ARRAY |
+| `preflight_pipeline.sh` | Validates pipeline scripts and orchestrator |
 
-Commands validated here include:
-- Shell and filesystem utilities
-- Stream processing tools
-- SLURM submission commands
+# Key Rules
+- Do not include execution logic in preflight scripts
+- Do not defer validation to later stages
+- Always fail immediately on errors
+- Only validate variables consumed by the script
+- Maintain strict ordering via `PREFLIGHT_ARRAY`
+- Do not rely on implicit environment state
+- Ensure all execution dependencies are satisfied before completion
 
-Tool‑specific binaries (e.g. `fasterq-dump`) are intentionally excluded and handled by dedicated tool preflight scripts.
+# Summary
+The `preflight/` directory guarantees that the pipeline executes in an environment that is:
+- fully validated
+- reproducible
+- deterministic
 
-## `preflight_sratoolkit.sh`
-Validates and installs the SRA Toolkit.
-
-### Responsibilities
-- Confirms a coherent SRA Toolkit installation is available
-- Verifies required toolkit binaries (`prefetch`, `fasterq-dump`, `vdb-config`)
-- Downloads and installs the toolkit if missing or incorrect
-- Writes a reproducible environment file (`env/sratoolkit.env`)
-- Ensures downstream scripts can safely source the tool environment
-
-This script centralizes all SRA Toolkit invariants so that execution modules never repeat validation or installation logic.
-
-# Execution Model
-All preflight scripts are:
-- Executed on the login node
-- Sourced into a single shell for shared context
-- Terminated immediately on failure
-
-The pipeline does not proceed unless all preflight scripts complete successfully.
-
-# Invariants Guaranteed After Preflight
-After successful preflight validation, downstream pipeline stages may assume:
-- Configuration variables are defined and valid
-- Input directories exist and contain `.sra` files
-- Accession lists exist and are non‑empty
-- Required framework‑level commands are available
-- The SRA Toolkit is installed, version‑correct, and usable
-- Tool environment files exist and can be safely sourced
-- Module scripts exist and contain valid code
-
-This contract enforces a clean separation between validation and execution throughout the sra-convert pipeline.
-
-# Notes
-- Preflight scripts are not intended to be run directly by end users
-- Tool installation performed during preflight is deterministic and restart‑safe
-- All validation logic is centralized in this directory
-- Module scripts do not repeat validation checks
-- Any modification to configuration, inputs, or pipeline code requires rerunning preflight
+By enforcing strict contracts and fail-fast validation, it provides a clean boundary between setup and execution.
+This ensures that all downstream pipeline stages can operate:
+- without ambiguity
+- without hidden dependencies
+- with full confidence in their execution context

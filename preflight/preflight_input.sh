@@ -1,36 +1,42 @@
 #!/bin/bash
-set -euo pipefail
 
-######################### GUARDS ##########################
+######################### GUARDS #########################
 
-: "${INPUT_DIR:?INPUT_DIR not set (check config.sh)}"
+GUARD_ARRAY=(
+    INPUT_DIR
+    ACCESSION_FILE
+)
+
+for var in "${GUARD_ARRAY[@]}"; do
+    variable_check_nonempty "${var}" || fail_message "Variable is empty or not defined: ${var}"
+done
 
 ######################### SETUP ##########################
 
 # Define script name
-SCRIPT_NAME=$(basename "${BASH_SOURCE[0]}" .sh)
+SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}" .sh)"
+# Define filetype pattern
+FILE_PATTERN="*.sra"
 
-######################### MAIN ############################
+######################### MAIN ###########################
 
-echo "  RUNNING ${SCRIPT_NAME} ..."
-echo "  Checking input directory: ${INPUT_DIR}..."
+echo
+echo "RUNNING ${SCRIPT_NAME} ..."
+echo "  Confirming input directory..."
 
-# Check input directory
-check_directory "${INPUT_DIR}" || fail "  Please provide an INPUT_DIR in config.sh that exists"
+directory_check_exists "${INPUT_DIR}" || fail_message "Input directory not found: ${INPUT_DIR}"
+directory_check_nonempty "${INPUT_DIR}" || fail_message "Input directory is empty: ${INPUT_DIR}"
 
-echo "  Input directory confirmed: ${INPUT_DIR}"
-echo "  Checking for .sra files..."
+echo "  Input directory confirmed"
+echo "  Confirming ${FILE_PATTERN} files..."
 
-# Check for at least one .sra file anywhere under INPUT_DIR
-if ! find "${INPUT_DIR}" -type f -name "*.sra" | grep -q .; then
-    fail "  ERROR: No .sra files found under INPUT_DIR=${INPUT_DIR}"
-fi
+directory_check_filetype "${INPUT_DIR}" "${FILE_PATTERN}" || fail_message "No files matching pattern '${FILE_PATTERN}' found in '${INPUT_DIR}'"
 
-echo "  .sra files found"
-echo "  Checking accession file: ${ACCESSION_FILE}..."
+echo "  ${FILE_PATTERN} files confirmed"
+echo "  Checking accession file..."
 
-check_file "${ACCESSION_FILE}" || fail "  Please ensure accession file exists: ${ACCESSION_FILE}"
-check_file_data "${ACCESSION_FILE}" || fail "  Please ensure accession file contains data: ${ACCESSION_FILE}"
+file_check_exists "${ACCESSION_FILE}" || fail_message "Accession file not found: ${ACCESSION_FILE}"
+file_check_nonempty "${ACCESSION_FILE}" || fail_message "Accession file is empty: ${ACCESSION_FILE}"
 
-echo "  Accession file confirmed"
-echo "  ${SCRIPT_NAME} COMPLETE"
+echo "  Accession file validated"
+echo "${SCRIPT_NAME} COMPLETE"
