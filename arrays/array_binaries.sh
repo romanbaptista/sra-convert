@@ -8,7 +8,7 @@
 # Scope:
 #   - Used by preflight_binaries.sh to validate command availability.
 #   - Represents all non-tool-specific commands required by:
-#       * run_pipeline.sh
+#       * sra-convert.sh (entrypoint)
 #       * preflight layer
 #       * pipeline modules
 #

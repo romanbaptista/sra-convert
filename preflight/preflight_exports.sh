@@ -33,6 +33,7 @@ echo "  Generating export snapshot..."
 
 # Export variables
 for var in "${EXPORT_ARRAY[@]}"; do
+    variable_check_nonempty "${var}" || fail_message "Export variable is empty or not set: ${var}"
     export "${var}"
 done
 

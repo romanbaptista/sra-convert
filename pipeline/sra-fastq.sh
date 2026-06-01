@@ -21,6 +21,11 @@ done
 # Define script name
 SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}" .sh)"
 
+######################### SOURCE ##########################
+
+# Source SRA-Toolkit environment file
+source "${SRA_ENV}"
+
 ######################### INPUT ##########################
 
 # Define sample ID
@@ -33,11 +38,6 @@ SAMPLE_FILE="${INPUT_DIR}/${SAMPLE_ID}/${SAMPLE_ID}.sra"
 # Define output directory
 SAMPLE_OUTDIR="${FASTQ_OUTDIR}/${SAMPLE_ID}"
 directory_create "${SAMPLE_OUTDIR}" || fail_message "Failed to create directory: ${SAMPLE_OUTDIR}"
-
-######################### SOURCE #########################
-
-# Source SRA-Toolkit environment file
-source "${SRA_ENV}"
 
 ######################### LOGS ###########################
 

@@ -5,7 +5,6 @@
 GUARD_ARRAY=(
     ROOT_DIR
     UTILS_DIR
-    OUTPUT_DIR
 )
 
 for var in "${GUARD_ARRAY[@]}"; do

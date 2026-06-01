@@ -33,7 +33,7 @@ echo "  Submitting array..."
 # Submit array
 sbatch \
     --export="${SBATCH_EXPORTS}" \
-    --job-name=convert_sra \
+    --job-name=sra-fastq \
     --array=1-${SRA_COUNT}%${SLURM_MAX_JOBS} \
     --cpus-per-task="${FASTERQ_CPUS}" \
     --mem-per-cpu="${FASTERQ_MEM_PER_CPU}" \
