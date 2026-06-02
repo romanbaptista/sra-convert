@@ -4,6 +4,7 @@ set -euo pipefail
 ######################### GUARDS #########################
 
 GUARD_ARRAY=(
+    FUNCTIONS_DIR
     SLURM_ARRAY_TASK_ID
     ACCESSION_FILE
     INPUT_DIR
@@ -13,7 +14,7 @@ GUARD_ARRAY=(
 )
 
 for var in "${GUARD_ARRAY[@]}"; do
-    variable_check_nonempty "${var}" || fail_message "Guard check failed: ${var}"
+    : "${!var:?${var} not set or empty}"
 done
 
 ######################### SETUP ##########################
@@ -23,7 +24,7 @@ SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}" .sh)"
 
 ######################### SOURCE ##########################
 
-# Source SRA-Toolkit environment file
+source "${FUNCTIONS_DIR}/functions_base.sh"
 source "${SRA_ENV}"
 
 ######################### INPUT ##########################

@@ -35,6 +35,7 @@
 
 # Define export array (execution ABI)
 EXPORT_ARRAY=(
+    FUNCTIONS_DIR
     ACCESSION_FILE
     INPUT_DIR
     FASTQ_OUTDIR

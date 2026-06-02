@@ -7,15 +7,20 @@ GUARD_ARRAY=(
     LOG_DIR
     PIPELINE_DIR
     SBATCH_EXPORTS
+    FUNCTIONS_DIR
 )
 
 for var in "${GUARD_ARRAY[@]}"; do
-    variable_check_nonempty "${var}" || fail_message "Guard check failed: ${var}"
+    : "${!var:?${var} not set or empty}"
 done
 
 ######################### SETUP ###########################
 
 SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}" .sh)"
+
+######################### SOURCE ##########################
+
+source "${FUNCTIONS_DIR}/functions_base.sh"
 
 ######################### LOGS ###########################
 
