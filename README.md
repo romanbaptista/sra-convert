@@ -1,7 +1,7 @@
 # `sra-convert`
 
 # Overview
-This repository contains the sra-convert pipeline — a modular, HPC‑compatible workflow for:
+This repository contains the `sra-convert` pipeline — a modular, HPC‑compatible workflow for:
 
 > Converting .sra files into FASTQ format using a reproducible, restart‑safe, and parallelised SLURM execution model.
 
@@ -18,7 +18,7 @@ Internally, the pipeline follows a contract‑driven architecture, separating:
 
 to ensure reproducibility, portability, and fail‑fast behaviour across different cluster environments.
 
-All outputs are written to a dedicated output/ directory, enabling seamless integration with downstream pipelines such as QC, trimming, or alignment.
+All outputs are written to a dedicated `output/` directory, enabling seamless integration with downstream pipelines such as QC, trimming, or alignment.
 
 # Repository Structure
 ```text
@@ -176,7 +176,7 @@ If you use this pipeline in published work, please cite:
 Optionally include the commit hash or release version used.
 
 # Why SRA Toolkit 2.10.9?
-Many HPC systems provide an older SRA Toolkit module such as sra-tools-2.10.3.tcl.
+Many HPC systems provide an older SRA Toolkit module such as `sra-tools-2.10.3.tcl`.
 
 While functional, these older builds often suffer from:
 - Outdated HTTPS handling
