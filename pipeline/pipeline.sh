@@ -36,7 +36,7 @@ echo "  Submitting submit_array.sh ..."
 SUBMIT_ID=$(
     sbatch \
         --parsable \
-        --job-name=submit_array \
+        --job-name=sra-convert-array \
         --export="${SBATCH_EXPORTS}" \
         --output="${LOG_DIR}/submit_array.%j.log" \
         "${PIPELINE_DIR}/submit_array.sh"
